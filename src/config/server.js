@@ -9,9 +9,7 @@ function createServers(app) {
   const servers = {};
 
   if (config.SSL.enabled) {
-    // HTTPS Server
     try {
-      // HTTPS Server
       const httpsOptions = {
         key: fs.readFileSync(path.join(__dirname, "..", config.SSL.key)),
         cert: fs.readFileSync(path.join(__dirname, "..", config.SSL.cert)),
@@ -20,19 +18,6 @@ function createServers(app) {
       servers.https = https.createServer(httpsOptions, app);
       servers.https.listen(config.SSL.port);
       logger.info(`HTTPS server running on port ${config.SSL.port}`);
-
-      // HTTP Server (for redirecting to HTTPS)
-      servers.http = http.createServer((req, res) => {
-        const httpsUrl = `https://${req.headers.host.split(":")[0]}:${
-          config.SSL.port
-        }${req.url}`;
-        res.writeHead(301, { Location: httpsUrl });
-        res.end();
-      });
-      servers.http.listen(config.PORT);
-      logger.info(
-        `HTTP server running on port ${config.PORT} (redirecting to HTTPS)`
-      );
     } catch (error) {
       logger.error(`Failed to start HTTPS server: ${error.message}`);
       logger.warn("Falling back to HTTP server only");
@@ -40,7 +25,6 @@ function createServers(app) {
       logger.info(`HTTP server running on port ${config.PORT}`);
     }
   } else {
-    // HTTP Server only
     servers.http = app.listen(config.PORT);
     logger.info(`HTTP server running on port ${config.PORT}`);
   }

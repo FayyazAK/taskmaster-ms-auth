@@ -11,7 +11,9 @@ module.exports = {
   UNAUTHORIZED: "Unauthorized - You must be logged in to access this resource",
   SERVICE_UNAVAILABLE:
     "Service Unavailable - The server is temporarily unable to service your request due to maintenance downtime or capacity problems. Please try again later.",
-
+  REQUEST_NOT_AUTHORIZED:
+    "Request not authorized - The request did not come through the gateway",
+  REQUEST_EXPIRED: "Request expired - The request is expired",
   //User
   USER_NOT_FOUND: "User not found",
   SIGNUP_FIELDS_REQUIRED:

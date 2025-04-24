@@ -112,7 +112,6 @@ const login = async (req, res, next) => {
 const getCurrentUser = async (req, res, next) => {
   try {
     const user_id = req.user.user_id;
-
     const user = await User.findById(user_id);
     if (!user) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);

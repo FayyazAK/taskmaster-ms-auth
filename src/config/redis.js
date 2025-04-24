@@ -1,7 +1,7 @@
 // config/redis.js
 const Redis = require("ioredis");
 const config = require("./env");
-const logger = require("./utils/logger");
+const logger = require("../utils/logger");
 
 const redisClient = new Redis({
   host: config.REDIS.HOST,
