@@ -1,9 +1,9 @@
-const app = require("./app");
-const config = require("./config/env");
-const db = require("./config/database");
-const initializeDatabase = require("./config/db-init");
-const createServers = require("./config/server");
-const logger = require("./utils/logger");
+const app = require("./src/app");
+const config = require("./src/config/env");
+const db = require("./src/config/database");
+const initializeDatabase = require("./src/config/db-init");
+const createServers = require("./src/config/server");
+const logger = require("./src/utils/logger");
 
 async function startServer() {
   try {
@@ -18,9 +18,7 @@ async function startServer() {
     const servers = createServers(app);
 
     if (config.SSL.enabled) {
-      logger.info(
-        `Auth service running on HTTPS port ${config.SSL.port} and HTTP port ${config.PORT} (redirecting)`
-      );
+      logger.info(`Auth service running on HTTPS port ${config.SSL.port}`);
     } else {
       logger.info(`Auth service running on HTTP port ${config.PORT}`);
     }

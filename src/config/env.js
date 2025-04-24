@@ -7,6 +7,10 @@ module.exports = {
   // SERVER CONFIG
   PORT: process.env.PORT || 3001,
 
+  // GATEWAY CONFIG
+  API_GATEWAY_SIGNATURE:
+    process.env.API_GATEWAY_SIGNATURE || "taskmaster@gateway",
+
   // CORS CONFIG
   CORS: {
     ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS

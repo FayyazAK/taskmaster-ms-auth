@@ -3,12 +3,13 @@ const config = require("../config/env");
 const { hashPassword } = require("../utils/userUtils");
 const USER = require("../queries/userQueries");
 const { cacheHelpers, keyGenerators } = require("../config/redis");
+const logger = require("../utils/logger");
 class User {
   static async createTable() {
     try {
       await db.execute(USER.CREATE_TABLE);
     } catch (error) {
-      console.error("Error creating users table:", error);
+      logger.error("Error creating users table:", error);
       throw error;
     }
   }
@@ -25,7 +26,7 @@ class User {
         "admin",
       ]);
     } catch (error) {
-      console.error("Error initializing admin user:", error);
+      logger.error("Error initializing admin user:", error);
       throw error;
     }
   }
