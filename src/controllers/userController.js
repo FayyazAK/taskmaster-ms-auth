@@ -8,6 +8,7 @@ const {
 } = require("../utils/userUtils");
 const STATUS = require("../utils/statusCodes");
 const MSG = require("../utils/messages");
+const todoService = require("../services/todoService");
 // Get all users (admin only)
 const getAllUsers = async (req, res) => {
   try {
@@ -165,7 +166,17 @@ const deleteUser = async (req, res) => {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
 
+    // Delete user's todo lists first
+    try {
+      await todoService.deleteUserLists(user_id, req.cookies);
+    } catch (error) {
+      // Log the error but continue with user deletion
+      logger.error(`Failed to delete user's todo lists: ${error.message}`);
+    }
+
+    // Delete the user
     await User.delete(user_id);
+
     res.success(null, MSG.USER_DELETED, STATUS.OK);
   } catch (error) {
     next(error);

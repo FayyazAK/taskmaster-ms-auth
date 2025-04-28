@@ -59,4 +59,7 @@ module.exports = {
     DB: process.env.REDIS_DB || 0,
   },
   CLEAR_CACHE_ON_START: process.env.CLEAR_CACHE_ON_START === "true",
+
+  // GATEWAY CONFIG
+  GATEWAY_URL: process.env.GATEWAY_URL || "https://localhost:443",
 };
