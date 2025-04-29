@@ -11,6 +11,8 @@ module.exports = {
   API_GATEWAY_SIGNATURE:
     process.env.API_GATEWAY_SIGNATURE || "taskmaster@gateway",
 
+  SYSTEM_TOKEN: process.env.SYSTEM_TOKEN || "taskmaster@system",
+
   // CORS CONFIG
   CORS: {
     ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS

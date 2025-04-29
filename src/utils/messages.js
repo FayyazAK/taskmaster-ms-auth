@@ -20,6 +20,8 @@ module.exports = {
     "First name, username, email and password are required",
   USERNAME_TAKEN: "Username already taken",
   USER_EMAIL_TAKEN: "Email already registered",
+  USER_NOT_VERIFIED_RESEND_EMAIL:
+    "Email not verified. A new verification email has been sent",
   SIGNUP_SUCCESS: "Registration successful",
   LOGIN_FIELDS_REQUIRED: "Email and password are required",
   LOGIN_SUCCESS: "Login successful",
@@ -27,7 +29,10 @@ module.exports = {
   USER_ID_REQUIRED: "User ID is required",
   USERS_RETRIEVED: "Users retrieved successfully",
   USER_RETRIEVED: "User retrieved successfully",
-  USER_REGISTERED: "User registered successfully",
+  USER_REGISTERED: "User verified and registered successfully",
   USER_UPDATED: "User updated successfully",
   USER_DELETED: "User deleted successfully",
+  USER_VERIFICATION_EMAIL_SENT: "User verification email sent successfully",
+  EMAIL_SEND_FAILED:
+    "Failed to send verification email. Please try again later",
 };

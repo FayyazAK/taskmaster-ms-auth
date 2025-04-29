@@ -23,6 +23,7 @@ class User {
         config.ADMIN_USERNAME,
         config.ADMIN_EMAIL,
         hashedPassword,
+        true,
         "admin",
       ]);
     } catch (error) {
@@ -38,12 +39,25 @@ class User {
       username,
       email,
       password,
+      false,
     ]);
 
     // Invalidate users cache
     await cacheHelpers.del(keyGenerators.users());
 
     return result.insertId;
+  }
+
+  static async verifyUser(user_id) {
+    await db.execute(USER.VERIFY_USER, [user_id]);
+    // Invalidate cache
+    await cacheHelpers.del(keyGenerators.user(user_id));
+    await cacheHelpers.del(keyGenerators.users());
+  }
+
+  static async isVerified(user_id) {
+    const user = await this.findById(user_id);
+    return user ? user.is_verified : false;
   }
 
   static async find() {
@@ -97,6 +111,23 @@ class User {
       firstName,
       lastName,
       username,
+      email,
+      password,
+      user_id,
+    ]);
+
+    // Invalidate users cache
+    await cacheHelpers.del(keyGenerators.users());
+    await cacheHelpers.del(keyGenerators.user(user_id));
+  }
+
+  static async updateUnverifiedUser(
+    user_id,
+    { firstName, lastName, email, password }
+  ) {
+    await db.execute(USER.UPDATE_UNVERIFIED_USER, [
+      firstName,
+      lastName,
       email,
       password,
       user_id,

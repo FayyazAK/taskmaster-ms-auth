@@ -5,10 +5,12 @@ const {
   login,
   getCurrentUser,
   logout,
+  verify,
 } = require("../controllers/authController");
 const { validateRequest } = require("../middleware/auth");
 
 router.post("/signup", register);
+router.get("/verify", verify);
 router.post("/login", login);
 router.get("/current-user", validateRequest, getCurrentUser);
 router.post("/logout", validateRequest, logout);

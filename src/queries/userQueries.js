@@ -13,6 +13,7 @@ module.exports = {
       email VARCHAR(100) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+      is_verified BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       INDEX idx_user_created_at (created_at),
@@ -24,10 +25,10 @@ module.exports = {
 
   // User management queries
   CREATE_USER:
-    "INSERT INTO users (first_name, last_name, username, email, password) VALUES (?, ?, ?, ?, ?)",
+    "INSERT INTO users (first_name, last_name, username, email, password, is_verified) VALUES (?, ?, ?, ?, ?, ?)",
 
   CREATE_ADMIN:
-    "INSERT IGNORE INTO users (first_name, last_name, username, email, password, role) VALUES (?, ?, ?, ?, ?, ?)",
+    "INSERT IGNORE INTO users (first_name, last_name, username, email, password, is_verified, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
 
   FIND_ALL_USERS: "SELECT * FROM users WHERE role = 'user'",
 
@@ -40,5 +41,10 @@ module.exports = {
   UPDATE_USER:
     "UPDATE users SET first_name = ?, last_name = ?, username = ?, email = ?, password = ? WHERE user_id = ?",
 
+  UPDATE_UNVERIFIED_USER:
+    "UPDATE users SET first_name = ?, last_name = ?, email = ?, password = ? WHERE user_id = ? AND is_verified = FALSE",
+
   DELETE_USER: "DELETE FROM users WHERE user_id = ?",
+
+  VERIFY_USER: "UPDATE users SET is_verified = TRUE WHERE user_id = ?",
 };

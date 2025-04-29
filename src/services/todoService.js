@@ -20,7 +20,7 @@ const TodoService = {
           },
         }
       );
-
+      logger.info(`User lists deleted for user ${userId}`);
       return response.data;
     } catch (error) {
       logger.error(`Error deleting user lists: ${error.message}`);
