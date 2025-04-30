@@ -11,6 +11,8 @@ module.exports = {
   API_GATEWAY_SIGNATURE:
     process.env.API_GATEWAY_SIGNATURE || "taskmaster@gateway",
 
+  SYSTEM_TOKEN: process.env.SYSTEM_TOKEN || "taskmaster@system",
+
   // CORS CONFIG
   CORS: {
     ALLOWED_ORIGINS: process.env.CORS_ALLOWED_ORIGINS
@@ -59,4 +61,7 @@ module.exports = {
     DB: process.env.REDIS_DB || 0,
   },
   CLEAR_CACHE_ON_START: process.env.CLEAR_CACHE_ON_START === "true",
+
+  // GATEWAY CONFIG
+  GATEWAY_URL: process.env.GATEWAY_URL || "https://localhost:443",
 };
