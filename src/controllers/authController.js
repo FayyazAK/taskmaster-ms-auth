@@ -136,7 +136,7 @@ const verify = async (req, res, next) => {
 
     // Verify the user
     await User.verifyUser(user.user_id);
-
+    user.is_verified = true;
     res.cookie("token", token, config.cookieOptions);
     res.success(sanitizeUser(user), MSG.USER_REGISTERED, STATUS.OK);
   } catch (error) {
