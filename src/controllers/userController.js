@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const UserService = require("../services/userService");
 const {
   validateEmail,
   validatePassword,
@@ -9,10 +9,12 @@ const {
 const STATUS = require("../utils/statusCodes");
 const MSG = require("../utils/messages");
 const todoService = require("../services/todoService");
+const logger = require("../utils/logger");
+
 // Get all users (admin only)
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await UserService.find();
     res.success(sanitizeUsers(users), MSG.USERS_RETRIEVED, STATUS.OK);
   } catch (error) {
     next(error);
@@ -20,14 +22,14 @@ const getAllUsers = async (req, res) => {
 };
 
 // Get single user (admin only)
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
-    const user_id = req.params.id;
-    if (!user_id) {
+    const userId = req.params.id;
+    if (!userId) {
       return res.error(MSG.USER_ID_REQUIRED, STATUS.BAD_REQUEST);
     }
 
-    const user = await User.findById(user_id);
+    const user = await UserService.findById(userId);
     if (!user) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
@@ -39,7 +41,7 @@ const getUserById = async (req, res) => {
 };
 
 // Create new user (admin only)
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   try {
     const { firstName, lastName, username, email, password } = req.body;
 
@@ -59,20 +61,22 @@ const createUser = async (req, res) => {
     }
 
     // Check for existing username
-    const existingUsername = await User.findByUsername(username.toLowerCase());
+    const existingUsername = await UserService.findByUsername(
+      username.toLowerCase()
+    );
     if (existingUsername) {
       return res.error(MSG.USERNAME_TAKEN, STATUS.CONFLICT);
     }
 
     // Check for existing email
-    const existingEmail = await User.findByEmail(email.toLowerCase());
+    const existingEmail = await UserService.findByEmail(email.toLowerCase());
     if (existingEmail) {
       return res.error(MSG.USER_EMAIL_TAKEN, STATUS.CONFLICT);
     }
 
     // Create new user
     const hashedPassword = await hashPassword(password);
-    const user_id = await User.create({
+    const userId = await UserService.create({
       firstName,
       lastName,
       username: username.toLowerCase(),
@@ -80,7 +84,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
     });
 
-    const newUser = await User.findById(user_id);
+    const newUser = await UserService.findById(userId);
     // Remove sensitive data
     res.success(sanitizeUser(newUser), MSG.USER_CREATED, STATUS.CREATED);
   } catch (error) {
@@ -89,17 +93,17 @@ const createUser = async (req, res) => {
 };
 
 // Update user (admin only)
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
-    const user_id = req.params.id;
+    const userId = req.params.id;
     const { firstName, lastName, username, email, password } = req.body;
 
-    if (!user_id) {
+    if (!userId) {
       return res.error(MSG.USER_ID_REQUIRED, STATUS.BAD_REQUEST);
     }
 
     // Check if user exists
-    const existingUser = await User.findById(user_id);
+    const existingUser = await UserService.findById(userId);
     if (!existingUser) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
@@ -116,7 +120,7 @@ const updateUser = async (req, res) => {
 
     // Check for duplicate username
     if (username && username.toLowerCase() !== existingUser.username) {
-      const existingUsername = await User.findByUsername(
+      const existingUsername = await UserService.findByUsername(
         username.toLowerCase()
       );
       if (existingUsername) {
@@ -126,7 +130,7 @@ const updateUser = async (req, res) => {
 
     // Check for duplicate email
     if (email && email.toLowerCase() !== existingUser.email) {
-      const existingEmail = await User.findByEmail(email.toLowerCase());
+      const existingEmail = await UserService.findByEmail(email.toLowerCase());
       if (existingEmail) {
         return res.error(MSG.USER_EMAIL_TAKEN, STATUS.CONFLICT);
       }
@@ -134,16 +138,16 @@ const updateUser = async (req, res) => {
 
     // Prepare update data
     const updateData = {
-      firstName: firstName || existingUser.first_name,
-      lastName: lastName || existingUser.last_name,
+      firstName: firstName || existingUser.firstName,
+      lastName: lastName || existingUser.lastName,
       username: username ? username.toLowerCase() : existingUser.username,
       email: email ? email.toLowerCase() : existingUser.email,
       password: password ? await hashPassword(password) : existingUser.password,
     };
 
     // Update user
-    await User.update(user_id, updateData);
-    const updatedUser = await User.findById(user_id);
+    await UserService.update(userId, updateData);
+    const updatedUser = await UserService.findById(userId);
     // Remove sensitive data
     res.success(sanitizeUser(updatedUser), MSG.USER_UPDATED, STATUS.OK);
   } catch (error) {
@@ -152,30 +156,30 @@ const updateUser = async (req, res) => {
 };
 
 // Delete user (admin only)
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
   try {
-    const user_id = req.params.id;
+    const userId = req.params.id;
 
-    if (!user_id) {
+    if (!userId) {
       return res.error(MSG.USER_ID_REQUIRED, STATUS.BAD_REQUEST);
     }
 
     // Check if user exists
-    const existingUser = await User.findById(user_id);
+    const existingUser = await UserService.findById(userId);
     if (!existingUser) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
 
     // Delete user's todo lists first
     try {
-      await todoService.deleteUserLists(user_id, req.cookies);
+      await todoService.deleteUserLists(userId, req.cookies);
     } catch (error) {
       // Log the error but continue with user deletion
       logger.error(`Failed to delete user's todo lists: ${error.message}`);
     }
 
     // Delete the user
-    await User.delete(user_id);
+    await UserService.delete(userId);
 
     res.success(null, MSG.USER_DELETED, STATUS.OK);
   } catch (error) {
@@ -184,13 +188,13 @@ const deleteUser = async (req, res) => {
 };
 
 // Update profile (user only)
-const updateProfile = async (req, res) => {
+const updateProfile = async (req, res, next) => {
   try {
-    const user_id = req.user.user_id;
+    const userId = req.user.userId;
     const { firstName, lastName, email, username, password } = req.body;
 
     // Check if user exists
-    const existingUser = await User.findById(user_id);
+    const existingUser = await UserService.findById(userId);
     if (!existingUser) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
@@ -208,7 +212,9 @@ const updateProfile = async (req, res) => {
       }
 
       if (email.toLowerCase() !== existingUser.email) {
-        const existingEmail = await User.findByEmail(email.toLowerCase());
+        const existingEmail = await UserService.findByEmail(
+          email.toLowerCase()
+        );
         if (existingEmail) {
           return res.error(MSG.USER_EMAIL_TAKEN, STATUS.CONFLICT);
         }
@@ -218,7 +224,7 @@ const updateProfile = async (req, res) => {
 
     if (username !== undefined) {
       if (username.toLowerCase() !== existingUser.username) {
-        const existingUsername = await User.findByUsername(
+        const existingUsername = await UserService.findByUsername(
           username.toLowerCase()
         );
         if (existingUsername) {
@@ -237,10 +243,10 @@ const updateProfile = async (req, res) => {
 
     // Only update if there are changes
     if (Object.keys(updateData).length > 0) {
-      await User.update(user_id, updateData);
+      await UserService.update(userId, updateData);
     }
 
-    const updatedUser = await User.findById(user_id);
+    const updatedUser = await UserService.findById(userId);
 
     res.success(sanitizeUser(updatedUser), MSG.USER_UPDATED, STATUS.OK);
   } catch (error) {

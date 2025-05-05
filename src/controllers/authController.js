@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const UserService = require("../services/userService");
 const bcrypt = require("bcrypt");
 const config = require("../config/auth");
 const {
@@ -11,6 +11,7 @@ const MSG = require("../utils/messages");
 const { generateToken, verifyToken } = require("../services/jwtService");
 const STATUS = require("../utils/statusCodes");
 const EmailService = require("../services/emailService");
+
 // Register a new user
 const register = async (req, res, next) => {
   try {
@@ -36,31 +37,29 @@ const register = async (req, res, next) => {
     }
 
     // Check for existing username
-    const existingUsername = await User.findByUsername(username.toLowerCase());
+    const existingUsername = await UserService.findByUsername(
+      username.toLowerCase()
+    );
     if (existingUsername) {
-      if (!existingUsername.is_verified) {
+      if (!existingUsername.isVerified) {
         // If username exists but user is unverified, allow registration with new email
-        const existingEmail = await User.findByEmail(email.toLowerCase());
-        if (
-          existingEmail &&
-          existingEmail.user_id !== existingUsername.user_id
-        ) {
+        const existingEmail = await UserService.findByEmail(
+          email.toLowerCase()
+        );
+        if (existingEmail && existingEmail.userId !== existingUsername.userId) {
           return res.error(MSG.USER_EMAIL_TAKEN, STATUS.CONFLICT);
         }
         // If same user trying to register again, update their information and resend verification email
-        if (
-          existingEmail &&
-          existingEmail.user_id === existingUsername.user_id
-        ) {
+        if (existingEmail && existingEmail.userId === existingUsername.userId) {
           const hashedPassword = await hashPassword(password);
-          await User.updateUnverifiedUser(existingUsername.user_id, {
+          await UserService.updateUnverifiedUser(existingUsername.userId, {
             firstName,
             lastName,
             email: email.toLowerCase(),
             password: hashedPassword,
           });
           const token = generateToken(
-            existingUsername.user_id,
+            existingUsername.userId,
             existingUsername.role
           );
           await EmailService.sendRegistrationEmail(
@@ -76,11 +75,11 @@ const register = async (req, res, next) => {
     }
 
     // Check for existing email
-    const existingEmail = await User.findByEmail(email.toLowerCase());
+    const existingEmail = await UserService.findByEmail(email.toLowerCase());
     if (existingEmail) {
-      if (!existingEmail.is_verified) {
+      if (!existingEmail.isVerified) {
         // Resend verification email
-        const token = generateToken(existingEmail.user_id, existingEmail.role);
+        const token = generateToken(existingEmail.userId, existingEmail.role);
         await EmailService.sendRegistrationEmail(
           existingEmail.email,
           token,
@@ -93,7 +92,7 @@ const register = async (req, res, next) => {
 
     // Create new user
     const hashedPassword = await hashPassword(password);
-    const user_id = await User.create({
+    const userId = await UserService.create({
       firstName,
       lastName,
       username: username.toLowerCase(),
@@ -101,10 +100,10 @@ const register = async (req, res, next) => {
       password: hashedPassword,
     });
 
-    const newUser = await User.findById(user_id);
+    const newUser = await UserService.findById(userId);
 
     // Generate JWT token
-    const token = generateToken(newUser.user_id, newUser.role);
+    const token = generateToken(newUser.userId, newUser.role);
 
     try {
       // Send registration email
@@ -116,7 +115,7 @@ const register = async (req, res, next) => {
       res.success(null, MSG.USER_VERIFICATION_EMAIL_SENT, STATUS.CREATED);
     } catch (emailError) {
       // If email fails, delete the unverified user and return error
-      await User.delete(user_id);
+      await UserService.delete(userId);
       return res.error(MSG.EMAIL_SEND_FAILED, STATUS.SERVICE_UNAVAILABLE);
     }
   } catch (error) {
@@ -129,20 +128,21 @@ const verify = async (req, res, next) => {
   try {
     const { token } = req.query;
     const decoded = verifyToken(token);
-    const user = await User.findById(decoded.user_id);
+    const user = await UserService.findById(decoded.userId);
     if (!user) {
       return res.error(MSG.INVALID_TOKEN, STATUS.UNAUTHORIZED);
     }
 
     // Verify the user
-    await User.verifyUser(user.user_id);
-    user.is_verified = true;
+    await UserService.verifyUser(user.userId);
+    user.isVerified = true;
     res.cookie("token", token, config.cookieOptions);
     res.success(sanitizeUser(user), MSG.USER_REGISTERED, STATUS.OK);
   } catch (error) {
     next(error);
   }
 };
+
 // Login user
 const login = async (req, res, next) => {
   try {
@@ -157,15 +157,15 @@ const login = async (req, res, next) => {
     }
 
     // Find user by email
-    const user = await User.findByEmail(email.toLowerCase());
+    const user = await UserService.findByEmail(email.toLowerCase());
     if (!user) {
       return res.error(MSG.INVALID_CREDENTIALS, STATUS.UNAUTHORIZED);
     }
 
     // Check if user is verified
-    if (!user.is_verified) {
+    if (!user.isVerified) {
       // Resend verification email
-      const token = generateToken(user.user_id, user.role);
+      const token = generateToken(user.userId, user.role);
       await EmailService.sendRegistrationEmail(
         user.email,
         token,
@@ -181,7 +181,7 @@ const login = async (req, res, next) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user.user_id, user.role);
+    const token = generateToken(user.userId, user.role);
 
     // Set cookie
     res.cookie("token", token, config.cookieOptions);
@@ -195,8 +195,8 @@ const login = async (req, res, next) => {
 // Get current user
 const getCurrentUser = async (req, res, next) => {
   try {
-    const user_id = req.user.user_id;
-    const user = await User.findById(user_id);
+    const userId = req.user.userId;
+    const user = await UserService.findById(userId);
     if (!user) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }

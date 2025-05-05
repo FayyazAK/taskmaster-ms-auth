@@ -24,6 +24,20 @@ redisClient.on("error", (err) => {
   logger.error("Redis connection error:", err);
 });
 
+// Handle Redis connection cleanup
+const cleanup = async () => {
+  try {
+    await redisClient.quit();
+    logger.info("Redis connection closed");
+  } catch (error) {
+    logger.error("Error closing Redis connection:", error);
+  }
+};
+
+// Handle process termination
+process.on("SIGTERM", cleanup);
+process.on("SIGINT", cleanup);
+
 // Cache helper functions
 const cacheHelpers = {
   async get(key) {
@@ -31,16 +45,21 @@ const cacheHelpers = {
       const data = await redisClient.get(key);
       return data ? JSON.parse(data) : null;
     } catch (error) {
-      logger.error(`Cache get error for key ${key}:`, error);
+      logger.error("Redis get error:", error);
       return null;
     }
   },
 
-  async set(key, data) {
+  async set(key, value, ttl = config.REDIS.TTL) {
     try {
-      await redisClient.set(key, JSON.stringify(data), "EX", config.REDIS.TTL);
+      const stringValue = JSON.stringify(value);
+      if (ttl) {
+        await redisClient.setex(key, ttl, stringValue);
+      } else {
+        await redisClient.set(key, stringValue);
+      }
     } catch (error) {
-      logger.error(`Cache set error for key ${key}:`, error);
+      logger.error("Redis set error:", error);
     }
   },
 
@@ -48,70 +67,19 @@ const cacheHelpers = {
     try {
       await redisClient.del(key);
     } catch (error) {
-      logger.error(`Cache delete error for key ${key}:`, error);
-    }
-  },
-
-  async deleteByPattern(pattern) {
-    try {
-      // Add the keyPrefix to the pattern
-      const fullPattern = `${redisClient.options.keyPrefix}${pattern}`;
-      const keys = await redisClient.keys(fullPattern);
-      if (keys.length > 0) {
-        // Remove the keyPrefix from keys before deleting
-        const keysWithoutPrefix = keys.map((key) =>
-          key.replace(redisClient.options.keyPrefix, "")
-        );
-        await redisClient.del(keysWithoutPrefix);
-      }
-    } catch (error) {
-      logger.error(
-        `Cache delete by pattern error for pattern ${pattern}:`,
-        error
-      );
+      logger.error("Redis delete error:", error);
     }
   },
 
   async deleteUserCache(userId) {
     try {
-      // Delete all user-related cache using patterns
-      const pattern = `users:${userId}*`;
-      await this.deleteByPattern(pattern);
-    } catch (error) {
-      logger.error(`Error deleting cache for user ${userId}:`, error);
-    }
-  },
-
-  async clear() {
-    try {
-      // Only clear keys with our prefix
-      const keys = await redisClient.keys(`${redisClient.options.keyPrefix}*`);
+      const pattern = `users:${userId}:*`;
+      const keys = await redisClient.keys(pattern);
       if (keys.length > 0) {
-        const keysWithoutPrefix = keys.map((key) =>
-          key.replace(redisClient.options.keyPrefix, "")
-        );
-        await redisClient.del(keysWithoutPrefix);
+        await redisClient.del(keys);
       }
-      logger.info("Auth service cache cleared");
     } catch (error) {
-      logger.error("Cache clear error:", error);
-    }
-  },
-
-  async clearAllListsAndTasks() {
-    try {
-      // Delete all lists and tasks using patterns
-      const patterns = [
-        "users:*:lists:*", // Matches all lists
-        "users:*:tasks:*", // Matches all tasks
-      ];
-
-      for (const pattern of patterns) {
-        await this.deleteByPattern(pattern);
-      }
-      logger.info("Successfully cleared all lists and tasks cache");
-    } catch (error) {
-      logger.error("Error clearing all lists and tasks cache:", error);
+      logger.error("Redis delete user cache error:", error);
     }
   },
 };
@@ -126,4 +94,5 @@ module.exports = {
   redisClient,
   cacheHelpers,
   keyGenerators,
+  cleanup,
 };

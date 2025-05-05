@@ -1,14 +1,16 @@
-const User = require("../models/User");
+const { sequelize } = require("./database");
+const UserService = require("../services/userService");
 const logger = require("../utils/logger");
 
 async function initializeDatabase() {
   try {
-    // Create user table
-    await User.createTable();
+    // Create tables
+    await sequelize.sync({ alter: true });
 
-    await User.initializeAdmin();
+    // Initialize admin user
+    await UserService.initializeAdmin();
 
-    logger.info("Auth service database initialized successfully!");
+    logger.info("Database initialization completed successfully");
   } catch (error) {
     logger.error("Error initializing database:", error);
     throw error;
