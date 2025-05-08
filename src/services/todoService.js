@@ -7,7 +7,7 @@ const TodoService = {
   async deleteUserLists(userId, cookies) {
     try {
       const response = await axios.delete(
-        `${config.GATEWAY_URL}/api/todo/lists`,
+        `${config.gateway.url}/api/todo/lists`,
         {
           withCredentials: true,
           httpsAgent: new https.Agent({

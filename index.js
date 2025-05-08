@@ -17,10 +17,10 @@ async function startServer() {
     // Create HTTP and/or HTTPS servers based on configuration
     const servers = createServers(app);
 
-    if (config.SSL.enabled) {
-      logger.info(`Auth service running on HTTPS port ${config.SSL.port}`);
+    if (config.ssl.enabled) {
+      logger.info(`Auth service running on HTTPS port ${config.ssl.port}`);
     } else {
-      logger.info(`Auth service running on HTTP port ${config.PORT}`);
+      logger.info(`Auth service running on HTTP port ${config.server.port}`);
     }
 
     // Handle graceful shutdown
