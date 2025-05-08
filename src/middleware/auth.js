@@ -53,7 +53,7 @@ const validateRequest = (req, res, next) => {
   }
 
   logger.debug(
-    `Request validated for user ${req.user.user_id} with role ${req.user.role}`
+    `Request validated for user ${req.user.userId} with role ${req.user.role}`
   );
 
   next();

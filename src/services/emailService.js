@@ -9,14 +9,14 @@ const EmailService = {
       const response = await axios.post(
         `${config.GATEWAY_URL}/api/emails/send`,
         {
-          recipient_email: email,
+          recipientEmail: email,
           subject: "Welcome to TaskMaster",
-          email_type: "registration",
-          template_data: {
+          emailType: "registration",
+          templateData: {
             name: name,
             verifyLink: `${config.GATEWAY_URL}/api/auth/verify?token=${token}`,
           },
-          scheduled_for: new Date()
+          scheduledFor: new Date()
             .toISOString()
             .replace("T", " ")
             .replace("Z", ""),
