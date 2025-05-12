@@ -56,6 +56,11 @@ module.exports = {
     user: env.DB_USER,
     password: env.DB_PASSWORD,
     name: env.AUTH_DB_NAME,
+    port: env.DB_PORT,
+  },
+  backup: {
+    dir: env.BACKUP_DIR,
+    retentionDays: env.BACKUP_RETENTION_DAYS,
   },
 
   admin: {
