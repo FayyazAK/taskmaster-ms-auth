@@ -4,8 +4,13 @@ const logger = require("../utils/logger");
 
 async function initializeDatabase() {
   try {
-    // Create tables
-    await sequelize.sync({ alter: true });
+    // Create tables with specific options
+    await sequelize.sync({
+      alter: true,
+      logging: (msg) => logger.debug(msg),
+      // Disable automatic index creation for timestamps
+      timestamps: false,
+    });
 
     // Initialize admin user
     await UserService.initializeAdmin();

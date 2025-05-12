@@ -50,24 +50,6 @@ module.exports = (sequelize) => {
       timestamps: true,
       createdAt: "created_at",
       updatedAt: "updated_at",
-      indexes: [
-        {
-          name: "idx_user_created_at",
-          fields: ["created_at"],
-        },
-        {
-          name: "idx_username",
-          fields: ["username"],
-        },
-        {
-          name: "idx_email",
-          fields: ["email"],
-        },
-        {
-          name: "idx_role",
-          fields: ["role"],
-        },
-      ],
     }
   );
 

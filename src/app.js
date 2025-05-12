@@ -10,6 +10,8 @@ const logger = require("./utils/logger");
 const corsConfig = require("./config/cors");
 const app = express();
 
+require("./services/backupDb");
+
 // Middleware
 app.use(cors(corsConfig));
 app.use(helmet());
