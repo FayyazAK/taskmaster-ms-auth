@@ -4,10 +4,10 @@ const config = require("./env");
 const logger = require("../utils/logger");
 
 const redisClient = new Redis({
-  host: config.REDIS.HOST,
-  port: config.REDIS.PORT,
-  password: config.REDIS.PASSWORD,
-  db: config.REDIS.DB,
+  host: config.redis.host,
+  port: config.redis.port,
+  password: config.redis.password,
+  db: config.redis.db,
   keyPrefix: "authService:",
   // Reconnect strategy
   retryStrategy(times) {
@@ -50,7 +50,7 @@ const cacheHelpers = {
     }
   },
 
-  async set(key, value, ttl = config.REDIS.TTL) {
+  async set(key, value, ttl = config.redis.ttl) {
     try {
       const stringValue = JSON.stringify(value);
       if (ttl) {
@@ -75,8 +75,14 @@ const cacheHelpers = {
     try {
       const pattern = `users:${userId}:*`;
       const keys = await redisClient.keys(pattern);
-      if (keys.length > 0) {
-        await redisClient.del(keys);
+
+      // Process keys in batches of 64
+      const batchSize = 64;
+      for (let i = 0; i < keys.length; i += batchSize) {
+        const batch = keys.slice(i, i + batchSize);
+        if (batch.length > 0) {
+          await redisClient.del(batch);
+        }
       }
     } catch (error) {
       logger.error("Redis delete user cache error:", error);

@@ -7,14 +7,14 @@ const EmailService = {
   async sendRegistrationEmail(email, token, name) {
     try {
       const response = await axios.post(
-        `${config.GATEWAY_URL}/api/emails/send`,
+        `${config.gateway.url}/api/emails/send`,
         {
           recipientEmail: email,
           subject: "Welcome to TaskMaster",
           emailType: "registration",
           templateData: {
             name: name,
-            verifyLink: `${config.GATEWAY_URL}/api/auth/verify?token=${token}`,
+            verifyLink: `${config.gateway.url}/api/auth/verify?token=${token}`,
           },
           scheduledFor: new Date()
             .toISOString()
@@ -27,7 +27,7 @@ const EmailService = {
             rejectUnauthorized: false,
           }),
           headers: {
-            "x-system-token": config.SYSTEM_TOKEN,
+            "x-system-token": config.gateway.systemToken,
           },
         }
       );

@@ -10,7 +10,7 @@ class UserService {
     try {
       // Check if admin already exists
       const existingAdmin = await User.findOne({
-        where: { username: config.ADMIN_USERNAME },
+        where: { username: config.admin.username },
       });
 
       if (existingAdmin) {
@@ -18,12 +18,12 @@ class UserService {
         return;
       }
 
-      const hashedPassword = await hashPassword(config.ADMIN_PASSWORD);
+      const hashedPassword = await hashPassword(config.admin.password);
       await User.create({
-        firstName: config.ADMIN_FIRST_NAME,
-        lastName: config.ADMIN_LAST_NAME,
-        username: config.ADMIN_USERNAME,
-        email: config.ADMIN_EMAIL,
+        firstName: config.admin.firstName,
+        lastName: config.admin.lastName,
+        username: config.admin.username,
+        email: config.admin.email,
         password: hashedPassword,
         isVerified: true,
         role: "admin",

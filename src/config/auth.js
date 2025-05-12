@@ -1,13 +1,13 @@
 const config = require("./env");
 
 module.exports = {
-  jwtSecret: config.JWT_SECRET,
-  jwtExpiresIn: config.JWT_EXPIRES_IN,
-  refreshTokenExpiresIn: config.REFRESH_TOKEN_EXPIRES_IN,
+  jwtSecret: config.jwt.secret,
+  jwtExpiresIn: config.jwt.expiresIn,
+  refreshTokenExpiresIn: config.jwt.refreshTokenExpiresIn,
   cookieOptions: {
-    httpOnly: true,
-    secure: config.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: config.COOKIE_EXPIRES_IN,
+    httpOnly: config.cookie.httpOnly,
+    secure: config.cookie.secure,
+    sameSite: config.cookie.sameSite,
+    maxAge: config.cookie.maxAge,
   },
 };
