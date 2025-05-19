@@ -88,6 +88,9 @@ const envSchema = Joi.object({
     .truthy("true")
     .falsy("false")
     .default(true),
+
+  // Kafka
+  KAFKA_BROKERS: Joi.string().default("localhost:9092"),
 })
   .unknown() // allow other vars
   .required();

@@ -4,6 +4,7 @@ const { sequelize } = require("./src/config/database");
 const initializeDatabase = require("./src/config/db-init");
 const createServers = require("./src/config/server");
 const logger = require("./src/utils/logger");
+const KafkaHandler = require("./src/services/kafkaHandler");
 
 async function startServer() {
   try {
@@ -14,8 +15,10 @@ async function startServer() {
     // Initialize database
     await initializeDatabase();
 
-    // Create HTTP and/or HTTPS servers based on configuration
-    const servers = createServers(app);
+    // Initialize Kafka handler
+    await KafkaHandler.initialize();
+    // Create server based on SSL configuration
+    const server = createServers(app);
 
     if (config.ssl.enabled) {
       logger.info(`Auth service running on HTTPS port ${config.ssl.port}`);
@@ -24,32 +27,17 @@ async function startServer() {
     }
 
     // Handle graceful shutdown
-    const shutdown = async () => {
-      logger.info("Shutting down gracefully...");
-      try {
-        // Close database connection
-        await sequelize.close();
-        logger.info("Database connection closed");
+    process.on("SIGTERM", async () => {
+      logger.info("SIGTERM received. Shutting down gracefully...");
+      await KafkaHandler.shutdown();
+      process.exit(0);
+    });
 
-        // Close HTTP/HTTPS servers
-        if (servers.https) {
-          await new Promise((resolve) => servers.https.close(resolve));
-        }
-        if (servers.http) {
-          await new Promise((resolve) => servers.http.close(resolve));
-        }
-        logger.info("Servers closed");
-
-        process.exit(0);
-      } catch (error) {
-        logger.error("Error during shutdown:", error);
-        process.exit(1);
-      }
-    };
-
-    // Handle shutdown signals
-    process.on("SIGTERM", shutdown);
-    process.on("SIGINT", shutdown);
+    process.on("SIGINT", async () => {
+      logger.info("SIGINT received. Shutting down gracefully...");
+      await KafkaHandler.shutdown();
+      process.exit(0);
+    });
   } catch (error) {
     logger.error("Failed to start Auth service:", error);
     process.exit(1);

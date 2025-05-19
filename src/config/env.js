@@ -98,4 +98,8 @@ module.exports = {
       subject: env.EMAIL_REG_SUBJECT,
     },
   },
+
+  kafka: {
+    brokers: env.KAFKA_BROKERS.split(","),
+  },
 };

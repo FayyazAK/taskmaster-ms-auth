@@ -1,29 +1,20 @@
-const axios = require("axios");
-const config = require("../config/env");
+
 const logger = require("../utils/logger");
-const https = require("https");
+const kafkaProducer = require("./kafkaProducer");
 
 const TodoService = {
-  async deleteUserLists(userId, cookies) {
+  async deleteUserLists(userId) {
     try {
-      const response = await axios.delete(
-        `${config.gateway.url}/api/todo/lists`,
-        {
-          withCredentials: true,
-          httpsAgent: new https.Agent({
-            rejectUnauthorized: false,
-          }),
-          headers: {
-            Cookie: Object.entries(cookies)
-              .map(([key, value]) => `${key}=${value}`)
-              .join("; "),
-          },
-        }
-      );
-      logger.info(`User lists deleted for user ${userId}`);
-      return response.data;
+      await kafkaProducer.sendMessage("user.delete", {
+        userId,
+        action: "delete",
+        timestamp: new Date().toISOString(),
+      });
+      logger.info(`User deletion message sent to Kafka for user ${userId}`);
     } catch (error) {
-      logger.error(`Error deleting user lists: ${error.message}`);
+      logger.error(
+        `Failed to send user deletion message to Kafka: ${error.message}`
+      );
       throw error;
     }
   },
