@@ -172,7 +172,7 @@ const deleteUser = async (req, res, next) => {
 
     // Delete user's todo lists first
     try {
-      await todoService.deleteUserLists(userId, req.cookies);
+      await todoService.deleteUserLists(userId);
     } catch (error) {
       // Log the error but continue with user deletion
       logger.error(`Failed to delete user's todo lists: ${error.message}`);

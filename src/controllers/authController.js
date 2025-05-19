@@ -62,7 +62,7 @@ const register = async (req, res, next) => {
             existingUsername.userId,
             existingUsername.role
           );
-          await EmailService.sendRegistrationEmail(
+          await EmailService.sendVerificationEmail(
             email.toLowerCase(),
             token,
             `${firstName} ${lastName}`
@@ -80,7 +80,7 @@ const register = async (req, res, next) => {
       if (!existingEmail.isVerified) {
         // Resend verification email
         const token = generateToken(existingEmail.userId, existingEmail.role);
-        await EmailService.sendRegistrationEmail(
+        await EmailService.sendVerificationEmail(
           existingEmail.email,
           token,
           `${existingEmail.firstName} ${existingEmail.lastName}`
@@ -107,14 +107,13 @@ const register = async (req, res, next) => {
 
     try {
       // Send registration email
-      await EmailService.sendRegistrationEmail(
+      await EmailService.sendVerificationEmail(
         newUser.email,
         token,
         `${newUser.firstName} ${newUser.lastName}`
       );
       res.success(null, MSG.USER_VERIFICATION_EMAIL_SENT, STATUS.CREATED);
     } catch (emailError) {
-      // If email fails, delete the unverified user and return error
       await UserService.delete(userId);
       return res.error(MSG.EMAIL_SEND_FAILED, STATUS.SERVICE_UNAVAILABLE);
     }

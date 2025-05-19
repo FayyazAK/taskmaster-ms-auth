@@ -6,10 +6,9 @@ async function initializeDatabase() {
   try {
     // Create tables with specific options
     await sequelize.sync({
-      alter: true,
+      alter: false,
+      force: false,
       logging: (msg) => logger.debug(msg),
-      // Disable automatic index creation for timestamps
-      timestamps: false,
     });
 
     // Initialize admin user
