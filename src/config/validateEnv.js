@@ -89,8 +89,8 @@ const envSchema = Joi.object({
     .falsy("false")
     .default(true),
 
-  // Kafka
-  KAFKA_BROKERS: Joi.string().default("localhost:9092"),
+  // RabbitMQ
+  RABBITMQ_URL: Joi.string().default("amqp://localhost:5672"),
 })
   .unknown() // allow other vars
   .required();

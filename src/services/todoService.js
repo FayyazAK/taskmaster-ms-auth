@@ -1,11 +1,10 @@
-
 const logger = require("../utils/logger");
-const kafkaProducer = require("./kafkaProducer");
+const rabbitProducer = require("./rabbitmqProducer");
 
 const TodoService = {
   async deleteUserLists(userId) {
     try {
-      await kafkaProducer.sendMessage("user.delete", {
+      await rabbitProducer.sendMessage("user.delete", {
         userId,
         action: "delete",
         timestamp: new Date().toISOString(),

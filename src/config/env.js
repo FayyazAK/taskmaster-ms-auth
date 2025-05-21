@@ -99,7 +99,7 @@ module.exports = {
     },
   },
 
-  kafka: {
-    brokers: env.KAFKA_BROKERS.split(","),
+  rabbitmq: {
+    url: env.RABBITMQ_URL,
   },
 };

@@ -8,7 +8,7 @@ const errorHandler = require("./middleware/errorHandler");
 const routes = require("./routes");
 const logger = require("./utils/logger");
 const corsConfig = require("./config/cors");
-const kafkaHandler = require("./services/kafkaHandler");
+const rabbitmqHandler = require("./services/rabbitmqHandler");
 const app = express();
 require("./services/backupDb");
 
@@ -29,24 +29,6 @@ app.use("/api", routes);
 // Health check endpoint
 app.get("/health", (req, res) => {
   return res.success(null, "Auth service is running", 200);
-});
-
-// Handle graceful shutdown
-process.on("SIGTERM", async () => {
-  logger.info("SIGTERM received. Starting graceful shutdown...");
-
-  try {
-    await kafkaHandler.shutdown();
-
-    // Close server
-    server.close(() => {
-      logger.info("Server closed");
-      process.exit(0);
-    });
-  } catch (error) {
-    logger.error("Error during shutdown:", error);
-    process.exit(1);
-  }
 });
 
 // Error handler Middleware

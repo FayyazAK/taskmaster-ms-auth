@@ -4,7 +4,7 @@ const { sequelize } = require("./src/config/database");
 const initializeDatabase = require("./src/config/db-init");
 const createServers = require("./src/config/server");
 const logger = require("./src/utils/logger");
-const KafkaHandler = require("./src/services/kafkaHandler");
+const RabbitMQHandler = require("./src/services/rabbitmqHandler");
 
 async function startServer() {
   try {
@@ -15,8 +15,9 @@ async function startServer() {
     // Initialize database
     await initializeDatabase();
 
-    // Initialize Kafka handler
-    await KafkaHandler.initialize();
+    // Initialize RabbitMQ handler
+    await RabbitMQHandler.initialize();
+
     // Create server based on SSL configuration
     const server = createServers(app);
 
@@ -27,17 +28,29 @@ async function startServer() {
     }
 
     // Handle graceful shutdown
-    process.on("SIGTERM", async () => {
-      logger.info("SIGTERM received. Shutting down gracefully...");
-      await KafkaHandler.shutdown();
+    const shutdownGracefully = async () => {
+      logger.info('Shutting down gracefully...');
+      
+      // Close server
+      server.close(() => {
+        logger.info('Server closed');
+      });
+      
+      // Close RabbitMQ connections
+      await RabbitMQHandler.close();
+      logger.info('RabbitMQ connections closed');
+      
+      // Close database connection
+      await sequelize.close();
+      logger.info('Database connection closed');
+      
       process.exit(0);
-    });
-
-    process.on("SIGINT", async () => {
-      logger.info("SIGINT received. Shutting down gracefully...");
-      await KafkaHandler.shutdown();
-      process.exit(0);
-    });
+    };
+    
+    // Listen for termination signals
+    process.on('SIGTERM', shutdownGracefully);
+    process.on('SIGINT', shutdownGracefully);
+    
   } catch (error) {
     logger.error("Failed to start Auth service:", error);
     process.exit(1);
