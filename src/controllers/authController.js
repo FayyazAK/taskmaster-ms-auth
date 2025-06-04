@@ -46,20 +46,20 @@ const register = async (req, res, next) => {
         const existingEmail = await UserService.findByEmail(
           email.toLowerCase()
         );
-        if (existingEmail && existingEmail.userId !== existingUsername.userId) {
+        if (existingEmail && existingEmail._id.toString() !== existingUsername._id.toString()) {
           return res.error(MSG.USER_EMAIL_TAKEN, STATUS.CONFLICT);
         }
         // If same user trying to register again, update their information and resend verification email
-        if (existingEmail && existingEmail.userId === existingUsername.userId) {
+        if (existingEmail && existingEmail._id.toString() === existingUsername._id.toString()) {
           const hashedPassword = await hashPassword(password);
-          await UserService.updateUnverifiedUser(existingUsername.userId, {
+          await UserService.updateUnverifiedUser(existingUsername._id, {
             firstName,
             lastName,
             email: email.toLowerCase(),
             password: hashedPassword,
           });
           const token = generateToken(
-            existingUsername.userId,
+            existingUsername._id,
             existingUsername.role
           );
           await EmailService.sendVerificationEmail(
@@ -79,7 +79,7 @@ const register = async (req, res, next) => {
     if (existingEmail) {
       if (!existingEmail.isVerified) {
         // Resend verification email
-        const token = generateToken(existingEmail.userId, existingEmail.role);
+        const token = generateToken(existingEmail._id, existingEmail.role);
         await EmailService.sendVerificationEmail(
           existingEmail.email,
           token,
@@ -92,7 +92,7 @@ const register = async (req, res, next) => {
 
     // Create new user
     const hashedPassword = await hashPassword(password);
-    const userId = await UserService.create({
+    const newUser = await UserService.create({
       firstName,
       lastName,
       username: username.toLowerCase(),
@@ -100,10 +100,8 @@ const register = async (req, res, next) => {
       password: hashedPassword,
     });
 
-    const newUser = await UserService.findById(userId);
-
     // Generate JWT token
-    const token = generateToken(newUser.userId, newUser.role);
+    const token = generateToken(newUser._id, newUser.role);
 
     try {
       // Send registration email
@@ -114,7 +112,7 @@ const register = async (req, res, next) => {
       );
       res.success(null, MSG.USER_VERIFICATION_EMAIL_SENT, STATUS.CREATED);
     } catch (emailError) {
-      await UserService.delete(userId);
+      await UserService.delete(newUser._id);
       return res.error(MSG.EMAIL_SEND_FAILED, STATUS.SERVICE_UNAVAILABLE);
     }
   } catch (error) {
@@ -133,7 +131,7 @@ const verify = async (req, res, next) => {
     }
 
     // Verify the user
-    await UserService.verifyUser(user.userId);
+    await UserService.verifyUser(user._id);
     user.isVerified = true;
     res.cookie("token", token, config.cookieOptions);
     res.success(sanitizeUser(user), MSG.USER_REGISTERED, STATUS.OK);
@@ -164,8 +162,8 @@ const login = async (req, res, next) => {
     // Check if user is verified
     if (!user.isVerified) {
       // Resend verification email
-      const token = generateToken(user.userId, user.role);
-      await EmailService.sendRegistrationEmail(
+      const token = generateToken(user._id, user.role);
+      await EmailService.sendVerificationEmail(
         user.email,
         token,
         `${user.firstName} ${user.lastName}`
@@ -180,7 +178,7 @@ const login = async (req, res, next) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user.userId, user.role);
+    const token = generateToken(user._id, user.role);
 
     // Set cookie
     res.cookie("token", token, config.cookieOptions);

@@ -1,19 +1,22 @@
 const { backupDatabase } = require("../services/backupDb");
+const STATUS = require("../utils/statusCodes");
+const MSG = require("../utils/messages");
+const logger = require("../utils/logger");
 
 const utilsController = {
-  backupDatabase: async (req, res) => {
+  backupDatabase: async (req, res, next) => {
     try {
       const backupPath = await backupDatabase();
       return res.success(
         backupPath,
-        "Database backup completed successfully",
-        200
+        MSG.BACKUP_SUCCESS,
+        STATUS.OK
       );
     } catch (error) {
-      console.error("Backup failed:", error);
+      logger.error("Backup failed:", error);
       return res.error(
-        "Failed to create database backup: " + error.message,
-        500
+        MSG.BACKUP_FAILED + ": " + error.message,
+        STATUS.INTERNAL_SERVER_ERROR
       );
     }
   },

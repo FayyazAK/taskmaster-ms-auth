@@ -33,7 +33,6 @@ const getUserById = async (req, res, next) => {
     if (!user) {
       return res.error(MSG.USER_NOT_FOUND, STATUS.NOT_FOUND);
     }
-    // Remove sensitive data
     res.success(sanitizeUser(user), MSG.USER_RETRIEVED, STATUS.OK);
   } catch (error) {
     next(error);
@@ -76,7 +75,7 @@ const createUser = async (req, res, next) => {
 
     // Create new user
     const hashedPassword = await hashPassword(password);
-    const userId = await UserService.create({
+    const newUser = await UserService.create({
       firstName,
       lastName,
       username: username.toLowerCase(),
@@ -84,8 +83,6 @@ const createUser = async (req, res, next) => {
       password: hashedPassword,
     });
 
-    const newUser = await UserService.findById(userId);
-    // Remove sensitive data
     res.success(sanitizeUser(newUser), MSG.USER_CREATED, STATUS.CREATED);
   } catch (error) {
     next(error);
@@ -146,9 +143,7 @@ const updateUser = async (req, res, next) => {
     };
 
     // Update user
-    await UserService.update(userId, updateData);
-    const updatedUser = await UserService.findById(userId);
-    // Remove sensitive data
+    const updatedUser = await UserService.update(userId, updateData);
     res.success(sanitizeUser(updatedUser), MSG.USER_UPDATED, STATUS.OK);
   } catch (error) {
     next(error);
@@ -243,12 +238,11 @@ const updateProfile = async (req, res, next) => {
 
     // Only update if there are changes
     if (Object.keys(updateData).length > 0) {
-      await UserService.update(userId, updateData);
+      const updatedUser = await UserService.update(userId, updateData);
+      res.success(sanitizeUser(updatedUser), MSG.USER_UPDATED, STATUS.OK);
+    } else {
+      res.success(sanitizeUser(existingUser), MSG.NO_CHANGES_MADE, STATUS.OK);
     }
-
-    const updatedUser = await UserService.findById(userId);
-
-    res.success(sanitizeUser(updatedUser), MSG.USER_UPDATED, STATUS.OK);
   } catch (error) {
     next(error);
   }

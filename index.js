@@ -1,6 +1,6 @@
 const app = require("./src/app");
 const config = require("./src/config/env");
-const { sequelize } = require("./src/config/database");
+const { connectDB } = require("./src/config/database");
 const initializeDatabase = require("./src/config/db-init");
 const createServers = require("./src/config/server");
 const logger = require("./src/utils/logger");
@@ -8,15 +8,16 @@ const KafkaHandler = require("./src/services/kafkaHandler");
 
 async function startServer() {
   try {
-    // Test database connection
-    await sequelize.authenticate();
-    logger.info("Connected to Auth database!");
+    // Connect to MongoDB
+    await connectDB();
+    logger.info("Connected to MongoDB!");
 
     // Initialize database
     await initializeDatabase();
 
     // Initialize Kafka handler
     await KafkaHandler.initialize();
+    
     // Create server based on SSL configuration
     const server = createServers(app);
 

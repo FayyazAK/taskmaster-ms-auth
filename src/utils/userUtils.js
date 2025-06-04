@@ -16,16 +16,15 @@ const hashPassword = async (password) => {
 
 const sanitizeUser = (user) => {
   if (!user) return null;
-
-  // Handle Sequelize model instance
-  const userData = user.get ? user.get({ plain: true }) : user;
+  
+  const userData = user.toObject ? user.toObject() : user;
 
   // Remove sensitive data
   const { password, ...sanitizedUser } = userData;
 
   // Ensure consistent field names
   return {
-    userId: sanitizedUser.userId,
+    userId: sanitizedUser._id,
     firstName: sanitizedUser.firstName,
     lastName: sanitizedUser.lastName,
     username: sanitizedUser.username,

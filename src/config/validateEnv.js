@@ -91,6 +91,10 @@ const envSchema = Joi.object({
 
   // Kafka
   KAFKA_BROKERS: Joi.string().default("localhost:9092"),
+
+  // MONGODB CONNECTION
+  MONGODB_URI: Joi.string().default("mongodb://localhost:27017"),
+  MONGODB_DB_NAME: Joi.string().default("taskmaster-auth-db"),
 })
   .unknown() // allow other vars
   .required();
