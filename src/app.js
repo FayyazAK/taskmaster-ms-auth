@@ -28,7 +28,7 @@ app.use("/api", routes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  return res.success(null, "Auth service is running", 200);
+  return res.success(null, "Auth service is up and running", 200);
 });
 
 // Handle graceful shutdown

@@ -12,7 +12,7 @@ const envSchema = Joi.object({
   // GATEWAY
   API_GATEWAY_SIGNATURE: Joi.string().default("taskmaster@gateway"),
   SYSTEM_TOKEN: Joi.string().default("taskmaster@system"),
-  GATEWAY_URL: Joi.string().uri().default("http://localhost:4000"),
+  GATEWAY_URL: Joi.string().default("http://localhost:4000"),
 
   // MYSQL DATABASE CONNECTION
   DB_HOST: Joi.string().default("localhost"),
